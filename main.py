@@ -4,6 +4,7 @@ import sys
 import os
 from pygame.locals import *
 pygame.init()
+pygame.font.init()
 
 SCREEN_WIDTH = 1100
 SCREEN_HEIGHT = 600
@@ -11,12 +12,26 @@ SCREEN_HEIGHT = 600
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 
 BG = pygame.image.load(os.path.join("Assets/Other","Track.png"))
+FONT = pygame.font.SysFont("comicsans",30)
+
+SMALL_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus1.png")),
+pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus2.png")),
+pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus3.png"))]
+
+LARGE_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus1.png")),
+pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus2.png")),
+pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus3.png"))]
 
 JUMPING = pygame.image.load(os.path.join("Assets/Dino","DinoJump.png"))
 
 RUNNING = [pygame.image.load(os.path.join("Assets/Dino","DinoRun1.png")),
 pygame.image.load(os.path.join("Assets/Dino","DinoRun2.png"))]
-
+global game_speed, x_pos_BG, y_pos_BG, points
+game_speed = 20
+x_pos_BG = 0 
+y_pos_BG = 380
+points = 0
+print(BG.get_width(), BG.get_height())
 
 class Dinosour:
 	x_pos = 80
@@ -71,10 +86,33 @@ class Dinosour:
 	def draw(self,SCREEN):
 		SCREEN.blit(self.image, (self.rect.x, self.rect.y))
 
+def score():
+	global game_speed, points
+	points+=1
+	if points %100 == 0:
+		game_speed+=1
+
+	text = FONT.render("Points: " + str(points), True, (0,0,0))
+	SCREEN.blit(text, (950,50))
+
+
+def background():
+	global x_pos_BG, y_pos_BG, game_speed
+	w = BG.get_width()
+	SCREEN.blit(BG,(x_pos_BG, y_pos_BG))
+	SCREEN.blit(BG,(x_pos_BG + w, y_pos_BG))
+	if(x_pos_BG + w <=0):
+		x_pos_BG = 0 
+	x_pos_BG -= game_speed
+
+
+
+
 def main():
 	clock = pygame.time.Clock()
 	run = True 
 	dinosaurs = [Dinosour()]
+	# print(x_pos_BG,y_pos_BG)
 	while run:
 		for event in pygame.event.get():
 			if event.type == QUIT:
@@ -82,6 +120,8 @@ def main():
 				sys.exit()
 
 		SCREEN.fill((255,255,255))
+		background()
+		score()
 		for dinosaur in dinosaurs:
 			dinosaur.update()
 			dinosaur.draw(SCREEN)
