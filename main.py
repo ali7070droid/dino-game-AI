@@ -74,22 +74,23 @@ class Dinosour:
 def main():
 	clock = pygame.time.Clock()
 	run = True 
-	dino = Dinosour()
+	dinosaurs = [Dinosour()]
 	while run:
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				pygame.quit()
 				sys.exit()
 
-		user_input = pygame.key.get_pressed()
-		if user_input[pygame.K_SPACE]:
-			dino.dino_jump = True 
-			dino.dino_run = False
 		SCREEN.fill((255,255,255))
-		dino.draw(SCREEN)
-		dino.update()
-		print(dino.rect.y)
-		clock.tick(30)
+		for dinosaur in dinosaurs:
+			dinosaur.update()
+			dinosaur.draw(SCREEN)
+		user_input = pygame.key.get_pressed()
+		for i, dinosaur in enumerate(dinosaurs):
+			if user_input[pygame.K_SPACE]:
+				dinosaur.dino_jump = True
+				dinosaur.dino_run = False
+		clock.tick(60)
 		pygame.display.update()
 
 main()
