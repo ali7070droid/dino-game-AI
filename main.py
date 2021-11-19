@@ -171,18 +171,11 @@ def main():
 				if dinosaur.rect.colliderect(obstacle.rect):
 					remove(i)
 
-
-
-
-
-
-
 		user_input = pygame.key.get_pressed()
 		for i, dinosaur in enumerate(dinosaurs):
 			if user_input[pygame.K_SPACE]:
 				dinosaur.dino_jump = True
 				dinosaur.dino_run = False
-
 
 		clock.tick(60)
 		pygame.display.update()
