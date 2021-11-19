@@ -2,6 +2,8 @@ import pygame
 import random
 import sys
 import os
+import math
+import neat
 from pygame.locals import *
 pygame.init()
 pygame.font.init()
@@ -26,7 +28,7 @@ JUMPING = pygame.image.load(os.path.join("Assets/Dino","DinoJump.png"))
 
 RUNNING = [pygame.image.load(os.path.join("Assets/Dino","DinoRun1.png")),
 pygame.image.load(os.path.join("Assets/Dino","DinoRun2.png"))]
-global game_speed, x_pos_BG, y_pos_BG, points, obstacles, dinosaurs
+global game_speed, x_pos_BG, y_pos_BG, points, obstacles, dinosaurs, ge, nets
 game_speed = 20
 x_pos_BG = 0 
 y_pos_BG = 380
@@ -132,15 +134,33 @@ def background():
 
 def remove(index):
 	dinosaurs.pop(index)
+	ge.pop(index)
+	nets.pop(index)
+
+def distance(pos_a, pos_b):
+	dx = pos_a[0] - pos_b[0]
+	dy = pos_a[1] - pos_b[1]
+	return math.sqrt(dx**2 + dy**2)
 
 
-def main():
-	global obstacles, dinosaurs
+def eval_genomes(genomes, config):
+	global obstacles, dinosaurs, ge, nets
 	clock = pygame.time.Clock()
 	run = True 
 	obstacles = []
-	dinosaurs = [Dinosour()]
+	dinosaurs = []
+	ge = []
+	nets = []
 	# print(x_pos_BG,y_pos_BG)
+
+	for genome_id, genome in genomes:
+		dinosaurs.append(Dinosour())
+		ge.append(genome)
+		net = neat.nn.FeedForwardNetwork.create(genome, config)
+		nets.append(net)
+		genome.fitness = 0 
+
+
 	while run:
 		for event in pygame.event.get():
 			if event.type == QUIT:
@@ -169,15 +189,36 @@ def main():
 			obstacle.update()
 			for i, dinosaur in enumerate(dinosaurs):
 				if dinosaur.rect.colliderect(obstacle.rect):
+					ge[i].fitness -= 1
 					remove(i)
 
-		user_input = pygame.key.get_pressed()
+		# user_input = pygame.key.get_pressed()
 		for i, dinosaur in enumerate(dinosaurs):
-			if user_input[pygame.K_SPACE]:
+			output = nets[i].activate((dinosaur.rect.y,
+									distance((dinosaur.rect.x, dinosaur.rect.y),
+										obstacle.rect.midtop)))
+			if output[0] >= 0.5 and dinosaur.rect.y == dinosaur.y_pos:
 				dinosaur.dino_jump = True
 				dinosaur.dino_run = False
 
 		clock.tick(60)
 		pygame.display.update()
 
-main()
+# main()
+
+def run(config_path):
+	config = neat.config.Config(
+		neat.DefaultGenome,
+		neat.DefaultReproduction,
+		neat.DefaultSpeciesSet,
+		neat.DefaultStagnation,
+		config_path
+	)
+	pop = neat.Population(config)
+	pop.run(eval_genomes, 50)
+
+if __name__ == '__main__':
+	local_dir = os.path.dirname(__file__)
+	config_path = os.path.join(local_dir, 'config.txt')
+	run(config_path)
+    
